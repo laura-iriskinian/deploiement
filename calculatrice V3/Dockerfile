@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN pip install flask psycopg2-binary
+RUN pip install flask
 
 COPY calculatrice.py .
 COPY templates/ templates/
