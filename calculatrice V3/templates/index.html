@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Calculatrice V2</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+      gap: 1.5rem;
+    }
+    .calculator {
+      background: #16213e;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      width: 280px;
+    }
+    .display {
+      background: #0f3460;
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      text-align: right;
+    }
+    .display .expr {
+      color: #a0aec0;
+      font-size: 0.85rem;
+      min-height: 1.2rem;
+      margin-bottom: 0.3rem;
+    }
+    .display .value {
+      color: white;
+      font-size: 2rem;
+      font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .display .error {
+      color: #fc8181;
+      font-size: 0.85rem;
+      min-height: 1rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 1rem 0;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: filter 0.1s, transform 0.1s;
+    }
+    button:active { filter: brightness(0.8); transform: scale(0.95); }
+    .btn-num { background: #1a1a4e; color: white; }
+    .btn-op { background: #e94560; color: white; font-size: 1.3rem; }
+    .btn-eq { background: #0f3460; color: white; font-size: 1.3rem; }
+    .btn-clear { background: #533483; color: white; grid-column: span 2; }
+    .btn-zero { grid-column: span 2; }
+
+    .history-panel {
+      background: #16213e;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      width: 220px;
+      height: 420px;
+      display: flex;
+      flex-direction: column;
+    }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .history-header h2 { color: white; font-size: 0.95rem; font-weight: 500; }
+    .btn-wipe {
+      background: #533483;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .btn-wipe:hover { filter: brightness(1.2); }
+    #history-list {
+      overflow-y: auto;
+      flex: 1;
+      list-style: none;
+    }
+    #history-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #0f3460;
+      font-size: 0.85rem;
+      color: #a0aec0;
+    }
+    #history-list li span { color: #e94560; font-weight: bold; }
+    .empty { color: #4a5568; font-size: 0.85rem; text-align: center; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <div class="display">
+      <div class="expr" id="expr"></div>
+      <div class="value" id="value">0</div>
+      <div class="error" id="error"></div>
+    </div>
+    <div class="grid">
+      <button class="btn-clear" onclick="clear_()">C</button>
+      <button class="btn-op" onclick="setOp('/')">÷</button>
+      <button class="btn-op" onclick="setOp('*')">×</button>
+
+      <button class="btn-num" onclick="digit('7')">7</button>
+      <button class="btn-num" onclick="digit('8')">8</button>
+      <button class="btn-num" onclick="digit('9')">9</button>
+      <button class="btn-op" onclick="setOp('-')">−</button>
+
+      <button class="btn-num" onclick="digit('4')">4</button>
+      <button class="btn-num" onclick="digit('5')">5</button>
+      <button class="btn-num" onclick="digit('6')">6</button>
+      <button class="btn-op" onclick="setOp('+')">+</button>
+
+      <button class="btn-num" onclick="digit('1')">1</button>
+      <button class="btn-num" onclick="digit('2')">2</button>
+      <button class="btn-num" onclick="digit('3')">3</button>
+      <button class="btn-eq" onclick="calculate()">=</button>
+
+      <button class="btn-num btn-zero" onclick="digit('0')">0</button>
+      <button class="btn-num" onclick="dot()">.</button>
+    </div>
+  </div>
+
+  <div class="history-panel">
+    <div class="history-header">
+      <h2>Historique</h2>
+      <button class="btn-wipe" onclick="clearHistory()">Effacer</button>
+    </div>
+    <ul id="history-list">
+      <li class="empty">Aucun calcul</li>
+    </ul>
+  </div>
+
+  <script>
+    let first = null, op = null, current = "0", justCalc = false;
+
+    function display(val) { document.getElementById("value").textContent = val; }
+    function setExpr(val) { document.getElementById("expr").textContent = val; }
+    function setError(val) { document.getElementById("error").textContent = val; }
+
+    function digit(d) {
+      setError("");
+      if (justCalc) { current = d; justCalc = false; }
+      else current = current === "0" ? d : current + d;
+      display(current);
+    }
+
+    function dot() {
+      if (!current.includes(".")) { current += "."; display(current); }
+    }
+
+    function setOp(o) {
+      setError("");
+      first = parseFloat(current);
+      op = o;
+      const sym = { "+": "+", "-": "−", "*": "×", "/": "÷" }[o];
+      setExpr(`${first} ${sym}`);
+      justCalc = false;
+      current = "0";
+    }
+
+    function clear_() {
+      first = null; op = null; current = "0"; justCalc = false;
+      display("0"); setExpr(""); setError("");
+    }
+
+    async function calculate() {
+      if (first === null || op === null) return;
+      const b = parseFloat(current);
+      const sym = { "+": "+", "-": "−", "*": "×", "/": "÷" }[op];
+      setExpr(`${first} ${sym} ${b} =`);
+
+      const res = await fetch("/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ a: first, op, b })
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        current = String(data.result);
+        display(data.result);
+        first = null; op = null; justCalc = true;
+        loadHistory();
+      }
+    }
+
+    async function loadHistory() {
+      const res = await fetch("/history");
+      const data = await res.json();
+      const list = document.getElementById("history-list");
+      if (data.length === 0) {
+        list.innerHTML = '<li class="empty">Aucun calcul</li>';
+        return;
+      }
+      list.innerHTML = [...data].reverse().map(e =>
+        `<li>${e.expression} = <span>${e.result}</span></li>`
+      ).join("");
+    }
+
+    async function clearHistory() {
+      await fetch("/history", { method: "DELETE" });
+      loadHistory();
+    }
+
+    loadHistory();
+  </script>
+</body>
+</html>
