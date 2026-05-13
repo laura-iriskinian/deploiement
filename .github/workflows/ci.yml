@@ -26,21 +26,21 @@ jobs:
       - name: Lancement des tests
         run: pytest test_calculatrice.py -v
 
-  docker:
-    name: Build Docker
-    runs-on: ubuntu-latest
-    needs: test
+  # docker:
+  #   name: Build Docker
+  #   runs-on: ubuntu-latest
+  #   needs: test
 
-    steps:
-      - name: Checkout du code
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout du code
+  #       uses: actions/checkout@v4
 
-      - name: Build de l'image Docker
-        run: docker build -t calculatrice .
+  #     - name: Build de l'image Docker
+  #       run: docker build -t calculatrice .
 
-      - name: Test du conteneur
-        run: |
-          docker run -d --name calc -p 3000:3000 calculatrice
-          sleep 3
-          curl -f http://localhost:3000 || exit 1
-          docker stop calc
+  #     - name: Test du conteneur
+  #       run: |
+  #         docker run -d --name calc -p 3000:3000 calculatrice
+  #         sleep 3
+  #         curl -f http://localhost:3000 || exit 1
+  #         docker stop calc

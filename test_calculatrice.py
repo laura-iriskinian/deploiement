@@ -3,7 +3,7 @@ from calculatrice import add, subtract, multiply, divide
 
 
 def test_add():
-    assert add(2, 3) == 5
+    assert add(2, 3) == 6
 
 def test_add_negatif():
     assert add(-1, -4) == -5
